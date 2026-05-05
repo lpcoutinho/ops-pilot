@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
+	"github.com/briandowns/spinner"
+	"github.com/fatih/color"
 	"github.com/lpcoutinho/ops-pilot/internal/agent"
 	"github.com/lpcoutinho/ops-pilot/internal/agent/providers"
 	"github.com/lpcoutinho/ops-pilot/internal/tools"
@@ -21,11 +24,18 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "ops-pilot",
+	Use:   "ops-pilot [question]",
 	Short: "Ops-Pilot is an AI-powered CLI for Linux administration",
-	Long: `Ops-Pilot is an open-source tool that acts as a natural language co-pilot
-for Linux system administration and auditing. It translates user intent into 
-safe system commands using LLMs.`,
+	Long: `Ops-Pilot acts as a natural language co-pilot for Linux system administration.
+If no sub-command is provided, it defaults to 'ask'.`,
+	Args: cobra.ArbitraryArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) > 0 {
+			askFunc(args[0])
+		} else {
+			cmd.Help()
+		}
+	},
 }
 
 var askCmd = &cobra.Command{
@@ -33,29 +43,62 @@ var askCmd = &cobra.Command{
 	Short: "Ask the pilot a question or give a command",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		question := args[0]
-		
+		askFunc(args[0])
+	},
+}
+
+func askFunc(question string) {
+	provider, err := providers.NewProviderFromConfig()
+	if err != nil {
+		color.Red("❌ Error: Failed to initialize LLM provider: %v", err)
+		os.Exit(1)
+	}
+
+	v := &validator.CommandValidator{DangerousMode: viper.GetBool("dangerous_mode")}
+	a := agent.NewAgent(provider, v)
+	a.RegisterTool(&tools.GetSystemHealthTool{})
+
+	c := color.New(color.FgCyan).Add(color.Bold)
+	c.Printf("🚀 Ops-Pilot is analyzing: %s\n", question)
+
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Suffix = " Thinking..."
+	s.Start()
+
+	response, err := a.Process(context.Background(), question)
+	s.Stop()
+
+	if err != nil {
+		color.Red("\n❌ Agent failed: %v", err)
+		os.Exit(1)
+	}
+
+	color.New(color.FgHiGreen).Println("\n🤖 Response:")
+	fmt.Println(response)
+}
+
+var modelsCmd = &cobra.Command{
+	Use:   "models",
+	Short: "List available models for the configured provider",
+	Run: func(cmd *cobra.Command, args []string) {
 		provider, err := providers.NewProviderFromConfig()
 		if err != nil {
 			slog.Error("Failed to initialize LLM provider", "error", err)
 			os.Exit(1)
 		}
 
-		v := &validator.CommandValidator{DangerousMode: viper.GetBool("dangerous_mode")}
-		a := agent.NewAgent(provider, v)
+		fmt.Printf("🔍 Fetching available models for provider: %s...\n", viper.GetString("llm_provider"))
 		
-		// Register default tools
-		a.RegisterTool(&tools.GetSystemHealthTool{})
-
-		fmt.Printf("🚀 Ops-Pilot is analyzing: %s\n", question)
-		
-		response, err := a.Process(context.Background(), question)
+		models, err := provider.ListModels(context.Background())
 		if err != nil {
-			slog.Error("Agent processing failed", "error", err)
+			slog.Error("Failed to list models", "error", err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("\n🤖 Response:\n%s\n", response)
+		fmt.Println("\nAvailable Models:")
+		for _, m := range models {
+			fmt.Printf(" - %s\n", m)
+		}
 	},
 }
 
@@ -73,6 +116,7 @@ func init() {
 	viper.SetDefault("llm_provider", "mock")
 	
 	rootCmd.AddCommand(askCmd)
+	rootCmd.AddCommand(modelsCmd)
 }
 
 func initConfig() {
