@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
 
+	"github.com/lpcoutinho/ops-pilot/internal/agent"
+	"github.com/lpcoutinho/ops-pilot/internal/agent/providers"
+	"github.com/lpcoutinho/ops-pilot/internal/tools"
+	"github.com/lpcoutinho/ops-pilot/pkg/validator"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -30,10 +35,27 @@ var askCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		question := args[0]
 		
-		// In a real implementation, we would choose the provider based on config
-		// For now, we'll use a placeholder or the first available implementation
-		fmt.Printf("Analyzing: %s\n", question)
-		fmt.Println("(Note: Integration with real LLM APIs will require setting LLM_API_KEY)")
+		provider, err := providers.NewProviderFromConfig()
+		if err != nil {
+			slog.Error("Failed to initialize LLM provider", "error", err)
+			os.Exit(1)
+		}
+
+		v := &validator.CommandValidator{DangerousMode: viper.GetBool("dangerous_mode")}
+		a := agent.NewAgent(provider, v)
+		
+		// Register default tools
+		a.RegisterTool(&tools.GetSystemHealthTool{})
+
+		fmt.Printf("🚀 Ops-Pilot is analyzing: %s\n", question)
+		
+		response, err := a.Process(context.Background(), question)
+		if err != nil {
+			slog.Error("Agent processing failed", "error", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\n🤖 Response:\n%s\n", response)
 	},
 }
 
@@ -47,6 +69,9 @@ func init() {
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("dangerous_mode", rootCmd.PersistentFlags().Lookup("dangerous-mode"))
 
+	// LLM Configs
+	viper.SetDefault("llm_provider", "mock")
+	
 	rootCmd.AddCommand(askCmd)
 }
 
