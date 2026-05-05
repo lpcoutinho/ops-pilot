@@ -4,7 +4,6 @@ bin/
 
 # Dependencies
 vendor/
-go.sum
 
 # IDEs and OS
 .idea/
