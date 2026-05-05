@@ -1,53 +1,49 @@
 # 🚀 Ops-Pilot
 
-**Ops-Pilot** acts as a natural language co-pilot for Linux and macOS system administration. It translates your intent into safe system commands, provides hardware diagnostics, and monitors system health using state-of-the-art LLMs.
+**Ops-Pilot** is an AI-powered CLI co-pilot for Linux and macOS system administration. It translates natural language into safe system diagnostics and monitoring actions.
 
 ---
 
 ## 🛠 Features
 
-- **Natural Language Interface:** Ask questions like "How is my system health?" or "What's consuming my memory?"
-- **Multi-LLM Support:** Seamless integration with **Anthropic (Claude)**, **OpenAI (GPT-4)**, **Google Gemini**, and **Ollama** (local models).
-- **Safety First:** Built-in validator to prevent destructive commands unless `--dangerous-mode` is explicitly used.
-- **Native Diagnostics:** Direct system calls via `gopsutil` for high-performance health monitoring.
-- **Global Installation:** Easy to install and use from anywhere in your terminal.
+- **Natural Language Interface:** Ask "Why is my system slow?" or "Check my network health."
+- **Multi-LLM Support:** Seamless integration with **Anthropic**, **OpenAI**, **Google Gemini**, and **Ollama**.
+- **Comprehensive Diagnostic Tools:**
+  - `get_system_health`: Real-time CPU, RAM, and Disk overview.
+  - `get_top_processes`: Identify resource-heavy processes.
+  - `audit_network`: Detailed interface and I/O traffic audit.
+  - `analyze_logs`: AI-driven analysis of system logs (`syslog`/`journalctl`).
+  - `get_hardware_info`: Kernel, Uptime, and CPU model details.
+- **Safety First:** Built-in command validator to prevent accidental destruction.
+- **Automated Distribution:** Native binaries via GitHub Releases and Homebrew.
 
 ---
 
 ## 📥 Installation
 
-### Homebrew (macOS & Linux)
+### Homebrew (Recommended)
 ```bash
 brew tap lpcoutinho/tap
 brew install ops-pilot
 ```
 
-### From Source (using Makefile)
+### From Source
 ```bash
 git clone https://github.com/lpcoutinho/ops-pilot.git
 cd ops-pilot
 make install
 ```
 
-### Direct Download
-Download the latest binary for your architecture from the [Releases](https://github.com/lpcoutinho/ops-pilot/releases) page.
-
 ---
 
 ## ⚙️ Configuration
 
-Create a file named `.ops-pilot.yaml` in your home directory or the project root:
+Create a `.ops-pilot.yaml` in your home directory:
 
 ```yaml
 llm_provider: gemini # options: gemini, openai, anthropic, ollama
 llm_api_key: "your-api-key"
-llm_model: "gemini-1.5-flash" # optional
-```
-
-You can also use environment variables:
-```bash
-export LLM_PROVIDER=gemini
-export LLM_API_KEY="your-api-key"
+llm_model: "gemini-1.5-flash"
 ```
 
 ---
@@ -55,22 +51,17 @@ export LLM_API_KEY="your-api-key"
 ## 🚀 Usage
 
 ```bash
-# General health check
-ops-pilot "How is my system doing?"
-
-# List available models for your provider
-ops-pilot models
-
-# Enable debug logging
-ops-pilot "Check my disk space" --debug
+ops-pilot "How is my system health?"
+ops-pilot "Which processes are consuming most RAM?"
+ops-pilot "Check network statistics"
+ops-pilot "Analyze recent system logs for errors"
 ```
 
 ---
 
-## 🛡 Security
+## 🤝 Contributing
 
-Ops-Pilot includes a security sandbox. Commands like `sudo`, `rm`, `mv`, and network modifications are restricted by default. To allow potentially dangerous operations, use the flag:
-`--dangerous-mode`
+We love contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to add new tools or providers.
 
 ---
 
