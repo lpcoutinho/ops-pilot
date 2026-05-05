@@ -96,3 +96,34 @@ func (p *OpenAIProvider) GenerateResponse(ctx context.Context, prompt string, to
 		Message: result.Choices[0].Message.Content,
 	}, nil
 }
+
+func (p *OpenAIProvider) ListModels(ctx context.Context) ([]string, error) {
+	resp, err := p.Client.R().
+		SetContext(ctx).
+		SetHeader("Authorization", "Bearer "+p.APIKey).
+		Get(p.BaseURL + "/models")
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list models: %w", err)
+	}
+
+	if resp.IsError() {
+		return nil, fmt.Errorf("api error (status %d): %s", resp.StatusCode(), resp.String())
+	}
+
+	var result struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(resp.Body(), &result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	var models []string
+	for _, m := range result.Data {
+		models = append(models, m.ID)
+	}
+	return models, nil
+}

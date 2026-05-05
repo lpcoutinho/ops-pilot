@@ -17,3 +17,7 @@ func (m *MockLLMProvider) GenerateResponse(ctx context.Context, prompt string, t
 	}
 	return m.Response, nil
 }
+
+func (m *MockLLMProvider) ListModels(ctx context.Context) ([]string, error) {
+	return []string{"mock-model-1", "mock-model-2"}, nil
+}

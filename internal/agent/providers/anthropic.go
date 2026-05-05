@@ -96,3 +96,13 @@ func (p *AnthropicProvider) GenerateResponse(ctx context.Context, prompt string,
 		Message: result.Content[0].Text,
 	}, nil
 }
+
+func (p *AnthropicProvider) ListModels(ctx context.Context) ([]string, error) {
+	// Anthropic currently does not provide a public models list endpoint like OpenAI
+	return []string{
+		"claude-3-5-sonnet-20240620",
+		"claude-3-opus-20240229",
+		"claude-3-sonnet-20240229",
+		"claude-3-haiku-20240307",
+	}, nil
+}
