@@ -1,0 +1,20 @@
+# Binaries
+ops-pilot
+bin/
+
+# Dependencies
+vendor/
+go.sum
+
+# IDEs and OS
+.idea/
+.vscode/
+.DS_Store
+
+# Gemini/Claude specific instructions (not for repo)
+CLAUDE.md
+GEMINI.md
+.gemini/
+.geminiignore
+memory/
+MEMORY.md
