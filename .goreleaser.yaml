@@ -1,0 +1,56 @@
+# .goreleaser.yaml
+version: 2
+
+project_name: ops-pilot
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    main: ./cmd/ops-pilot
+    binary: ops-pilot
+
+archives:
+  - format: tar.gz
+    # this name template makes the brew formula easier to maintain
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+brews:
+  - name: ops-pilot
+    repository:
+      owner: lpcoutinho
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/lpcoutinho/ops-pilot"
+    description: "AI-powered CLI for Linux/macOS system administration"
+    license: "MIT"
+    test: |
+      system "#{bin}/ops-pilot --help"
+    install: |
+      bin.install "ops-pilot"
