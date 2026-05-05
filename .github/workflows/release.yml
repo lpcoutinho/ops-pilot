@@ -24,6 +24,9 @@ jobs:
           github_token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
           default_bump: patch
 
+      - name: Fetch tags
+        run: git fetch --tags --force
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
