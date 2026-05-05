@@ -58,6 +58,7 @@ func askFunc(question string) {
 	a := agent.NewAgent(provider, v)
 	a.RegisterTool(&tools.GetSystemHealthTool{})
 	a.RegisterTool(&tools.GetTopProcessesTool{})
+	a.RegisterTool(&tools.AuditNetworkTool{})
 
 	c := color.New(color.FgCyan).Add(color.Bold)
 	c.Printf("🚀 Ops-Pilot is analyzing: %s\n", question)
