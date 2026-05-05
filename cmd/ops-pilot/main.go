@@ -57,6 +57,7 @@ func askFunc(question string) {
 	v := &validator.CommandValidator{DangerousMode: viper.GetBool("dangerous_mode")}
 	a := agent.NewAgent(provider, v)
 	a.RegisterTool(&tools.GetSystemHealthTool{})
+	a.RegisterTool(&tools.GetTopProcessesTool{})
 
 	c := color.New(color.FgCyan).Add(color.Bold)
 	c.Printf("🚀 Ops-Pilot is analyzing: %s\n", question)
